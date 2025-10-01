@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="card">
+    <h2>Sign In</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="small" style="color:green;">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    {% if error %}
+      <div class="small" style="color:#b71c1c;">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+      <input class="input" type="text" name="username" placeholder="Username" required>
+      <input class="input" type="password" name="password" placeholder="Password" required>
+
+      <!-- ✅ Role selection -->
+      <select class="input" name="role" required>
+        <option value="faculty">Faculty</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p class="small">
+      <a href="/register">Register a new user</a> • 
+      <a href="/forgot">Forgot Password?</a>
+    </p>
+  </div>
+</body>
+</html>

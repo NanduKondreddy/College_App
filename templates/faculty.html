@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Faculty — Check Seat Availability</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Full‐viewport background image */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('/static/University.jpg') center/cover fixed no-repeat;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.05);
+      z-index: 1;
+    }
+
+    .navbar {
+      background-color: #8e1919;
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .navbar h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      margin-left: 15px;
+    }
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: #fff;
+      padding: 20px;
+      margin: 30px auto;
+      max-width: 600px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      position: relative;
+      z-index: 2;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .row > div {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .row > div:last-child {
+      margin-right: 0;
+    }
+
+    .small {
+      font-size: 0.85rem;
+      margin-top: 8px;
+      color: #555;
+    }
+
+    .input {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #8e1919;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #a82222;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #777;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="navbar">
+    <h1>Faculty Dashboard</h1>
+    <div>
+      <span>Logged in as Faculty</span>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Check Seat Availability</h2>
+
+    <div class="row">
+      <div>
+        <label class="small">Stream</label>
+        <select id="stream" class="input"></select>
+      </div>
+      <div>
+        <label class="small">Course</label>
+        <select id="course" class="input"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="small">Semester</label>
+        <select id="semester" class="input"></select>
+      </div>
+      <div>
+        <label class="small">Available Seats</label>
+        <input id="available" class="input" type="text" readonly placeholder="—">
+      </div>
+    </div>
+
+    <button id="refresh">Refresh</button>
+    <p id="msg" class="small"></p>
+  </div>
+
+  <div class="footer">College Seat Management System © 2025</div>
+
+  <script>
+    const streamSel   = document.getElementById('stream');
+    const courseSel   = document.getElementById('course');
+    const semesterSel = document.getElementById('semester');
+    const availInput  = document.getElementById('available');
+    const refreshBtn  = document.getElementById('refresh');
+    const msg         = document.getElementById('msg');
+
+    async function loadStreams() {
+      const streams = await (await fetch('/api/streams')).json();
+      streamSel.innerHTML =
+        '<option value="">Select stream</option>' +
+        streams.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    async function loadCourses(streamId) {
+      const courses = await (await fetch(`/api/courses/${streamId}`)).json();
+      courseSel.innerHTML =
+        '<option value="">Select course</option>' +
+        courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      semesterSel.innerHTML = '<option value="">Select course first</option>';
+      availInput.value = '';
+      msg.textContent = '';
+    }
+
+    async function loadSemesters(courseId) {
+      const sems = await (await fetch(`/api/semesters/${courseId}`)).json();
+      semesterSel.innerHTML =
+        '<option value="">Select semester</option>' +
+        sems.map(s =>
+          `<option value="${s.id}" data-seats="${s.available_seats}">
+             Semester ${s.number}
+           </option>`
+        ).join('');
+      availInput.value = '';
+      msg.textContent = '';
+    }
+
+    // Show seats on semester change
+    semesterSel.addEventListener('change', () => {
+      const opt = semesterSel.selectedOptions[0];
+      availInput.value = opt ? opt.dataset.seats : '';
+      msg.textContent = '';
+    });
+
+    // Refresh semesters and show caption
+    refreshBtn.addEventListener('click', async () => {
+      if (courseSel.value) {
+        await loadSemesters(courseSel.value);
+        msg.textContent = 'Refreshed';
+      }
+    });
+
+    // Wire up dropdowns
+    streamSel.addEventListener('change', e => {
+      if (e.target.value) loadCourses(e.target.value);
+    });
+    courseSel.addEventListener('change', e => {
+      if (e.target.value) loadSemesters(e.target.value);
+    });
+
+    // Initial load
+    loadStreams();
+  </script>
+</body>
+</html>

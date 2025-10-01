@@ -1,0 +1,55 @@
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background: url('/static/university.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+}
+.card {
+  position: relative;
+  margin: 80px auto;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  width: 90%;
+  max-width: 520px;
+}
+h2 {
+  margin-top: 0;
+}
+.input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+button {
+  background-color: #b71c1c;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+button:hover { background-color: #8e1919; }
+.small { font-size: 0.9rem; color: #555; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.footer {
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: #777;
+  text-align: center;
+}
+
+.navbar, .card {
+  position: relative;
+  z-index: 2;
+}
+.overlay {
+  z-index: 1;
+}
