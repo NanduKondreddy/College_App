@@ -1,11 +1,12 @@
 import os
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 class Config:
-    # Set your DB here (MySQL example)
-    # mysql+pymysql://USER:PASSWORD@HOST:PORT/DBNAME
+    # Use DATABASE_URL if set (managed DB); otherwise fall back to local SQLite.
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "mysql+pymysql://root:admin@localhost:3306/college_app"  # default fallback for quick start
+        "sqlite:///" + os.path.join(basedir, "data.db")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
