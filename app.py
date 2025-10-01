@@ -78,6 +78,17 @@ def cli_full_refresh():
     db.session.commit()
     click.echo("✅ full-refresh complete")
 
+@app.route('/seed-all')
+def seed_all():
+    db.create_all()
+    if User.query.count() == 0:
+        from seed import seed_users, seed_demo_data
+        seed_users()
+        seed_demo_data()
+        db.session.commit()
+        return '✅ Database seeded', 200
+    return '⚠️ Already seeded', 200
+
 
 # ---------------- Routes ----------------
 
@@ -85,6 +96,9 @@ def cli_full_refresh():
 def home():
     return redirect("/login")
 
+@app.route("/ping")
+def ping():
+    return "App is alive!"
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
