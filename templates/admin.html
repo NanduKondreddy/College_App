@@ -1,136 +1,130 @@
+<!-- templates/admin.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Admin — Update Seats</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    .navbar { background-color: #8e1919; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
-    .navbar h1 { margin: 0; font-size: 1.2rem; }
-    .navbar a { color: white; text-decoration: none; margin-left: 15px; }
-    .navbar a:hover { text-decoration: underline; }
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.05); z-index: 1; }
-    .card { background: #fff; padding: 20px; margin: 30px auto; max-width: 600px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); position: relative; z-index: 2; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-    .row > div { flex: 1; margin-right: 10px; }
-    .row > div:last-child { margin-right: 0; }
-    .input { width: 100%; padding: 6px; margin-top: 4px; }
-    button { background: #8e1919; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #a82222; }
-    .footer { margin-top: 20px; font-size: 0.85rem; color: #777; text-align: center; }
-    .small { font-size: 0.85rem; }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="navbar">
-    <h1>Admin Dashboard</h1>
+  <div class="overlay"></div>
+
+  <nav class="navbar">
+    <div>Admin Dashboard</div>
     <div>
       <span>Logged in as Admin</span>
-      <a href="/logout">Logout</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
     </div>
-  </div>
-
-  <div class="overlay"></div>
+  </nav>
 
   <div class="card">
     <h2>Update Seat Availability</h2>
 
     <div class="row">
-      <div>
-        <label class="small">Stream</label>
-        <select id="stream" class="input"></select>
+      <div class="field">
+        <label for="stream">Stream</label>
+        <select id="stream" class="input" disabled>
+          <option>Loading…</option>
+        </select>
       </div>
-      <div>
-        <label class="small">Course</label>
-        <select id="course" class="input"></select>
+      <div class="field">
+        <label for="course">Course</label>
+        <select id="course" class="input" disabled>
+          <option>Select stream first</option>
+        </select>
       </div>
     </div>
 
     <div class="row">
-      <div>
-        <label class="small">Semester</label>
-        <select id="semester" class="input"></select>
+      <div class="field">
+        <label for="semester">Semester</label>
+        <select id="semester" class="input" disabled>
+          <option>Select course first</option>
+        </select>
       </div>
-      <div>
-        <label class="small">New Seat Count</label>
+      <div class="field">
+        <label for="count">New Seat Count</label>
         <input id="count" class="input" type="number" min="0" placeholder="Enter seats">
       </div>
     </div>
 
     <button id="update">Update</button>
-    <p class="small" id="msg"></p>
+    <p id="msg" class="message"></p>
   </div>
 
-  <div class="footer">College Seat Management System © 2025</div>
+  <footer class="footer">
+    College Seat Management System © 2025
+  </footer>
 
   <script>
+    const token     = "{{ jwt }}";
     const streamSel = document.getElementById('stream');
     const courseSel = document.getElementById('course');
     const semesterSel = document.getElementById('semester');
-    const countInput = document.getElementById('count');
-    const msg = document.getElementById('msg');
-
-    const token = "{{ jwt }}";
+    const countInput  = document.getElementById('count');
+    const msg         = document.getElementById('msg');
 
     async function loadStreams() {
       const res = await fetch('/api/streams');
       const data = await res.json();
       streamSel.innerHTML = '<option value="">Select stream</option>' +
         data.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      streamSel.disabled = false;
     }
 
-    async function loadCourses(streamId) {
-      const res = await fetch(`/api/courses/${streamId}`);
+    async function loadCourses(id) {
+      courseSel.disabled = true;
+      semesterSel.disabled = true;
+      const res = await fetch(`/api/courses/${id}`);
       const data = await res.json();
       courseSel.innerHTML = '<option value="">Select course</option>' +
         data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      courseSel.disabled = false;
       semesterSel.innerHTML = '<option value="">Select semester</option>';
     }
 
-    async function loadSemesters(courseId) {
-      const res = await fetch(`/api/semesters/${courseId}`);
+    async function loadSemesters(id) {
+      semesterSel.disabled = true;
+      const res = await fetch(`/api/semesters/${id}`);
       const data = await res.json();
       semesterSel.innerHTML = '<option value="">Select semester</option>' +
-        data.map(s => `<option value="${s.id}" data-seats="${s.available_seats}">Semester ${s.number} (Seats: ${s.available_seats})</option>`).join('');
+        data.map(s =>
+          `<option value="${s.id}" data-seats="${s.available_seats}">
+             Semester ${s.number} (Seats: ${s.available_seats})
+           </option>`
+        ).join('');
+      semesterSel.disabled = false;
     }
 
     async function updateSeats() {
+      msg.textContent = '';
       const semesterId = semesterSel.value;
       const count = countInput.value;
-
       if (!semesterId || count === '') {
-        msg.textContent = 'Please select semester and enter seat count.';
+        msg.textContent = 'Please choose a semester and enter a seat count.';
         return;
       }
-
-      const payload = {
-        semester_id: parseInt(semesterId, 10),
-        count: parseInt(count, 10)
-      };
-
       const res = await fetch('/api/update_seats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          semester_id: +semesterId,
+          count: +count
+        })
       });
-
       const data = await res.json();
-      msg.textContent = data.message || data.error || 'Done';
-
-      if (res.ok && courseSel.value) {
-        // Refresh semesters to reflect updated seats and keep the same selection
-        const prevSemId = semesterSel.value;
+      msg.textContent = data.message || data.error || 'Update complete';
+      if (res.ok) {
         await loadSemesters(courseSel.value);
-        if (prevSemId) semesterSel.value = String(prevSemId);
+        semesterSel.value = semesterId;
       }
     }
 
     streamSel.addEventListener('change', e => {
       if (e.target.value) loadCourses(e.target.value);
-      semesterSel.innerHTML = '<option value="">Select semester</option>';
     });
 
     courseSel.addEventListener('change', e => {

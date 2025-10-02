@@ -1,80 +1,43 @@
+<!-- templates/forgot.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Forgot Password</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    .card {
-      background: #fff;
-      padding: 20px;
-      margin: 50px auto;
-      max-width: 400px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    h2 {
-      margin-bottom: 15px;
-      color: #8e1919;
-    }
-    .input {
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0 12px 0;
-    }
-    button {
-      background: #8e1919;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-    }
-    button:hover {
-      background: #a82222;
-    }
-    .small {
-      font-size: 0.85rem;
-      color: #555;
-      text-align: center;
-      margin-top: 12px;
-    }
-    .small a {
-      color: #8e1919;
-      text-decoration: none;
-    }
-    .small a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <title>Reset Password — College Seat Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="overlay"></div>
+
   <div class="card">
     <h2>Reset Password</h2>
 
     {% if error %}
-      <p style="color:red;">{{ error }}</p>
+      <p class="small message error">{{ error }}</p>
     {% endif %}
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <p style="color:green;">{{ messages[0] }}</p>
+        {% for m in messages %}
+          <p class="small message">{{ m }}</p>
+        {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <form method="POST">
-      <label>Username</label>
-      <input type="text" name="username" class="input" required>
-
-      <label>New Password</label>
-      <input type="password" name="new_password" class="input" required>
-
+    <form method="POST" action="{{ url_for('forgot_password') }}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" class="input" type="text" name="username" placeholder="Enter your username" required>
+      </div>
+      <div class="field">
+        <label for="new_password">New Password</label>
+        <input id="new_password" class="input" type="password" name="new_password" placeholder="Enter new password" required>
+      </div>
       <button type="submit">Update Password</button>
     </form>
 
-    <!-- ✅ Link back to login -->
     <p class="small">
-      <a href="{{ url_for('login_page') }}">Back to Login</a>
+      <a href="{{ url_for('login_page') }}">← Back to Login</a>
     </p>
   </div>
 </body>
